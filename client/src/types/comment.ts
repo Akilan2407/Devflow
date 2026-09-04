@@ -1,0 +1,2 @@
+export type CommentUser = string | { _id: string; name: string; email: string; avatar?: string | null };
+export type Comment = { _id: string; organizationId: string; authorId: CommentUser; entityType: 'PROJECT' | 'TASK' | 'ISSUE'; entityId: string; content: string; mentions: CommentUser[]; createdAt: string; updatedAt: string };

@@ -1,0 +1,10 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../lib/api';
+import type { Comment } from '../types/comment';
+
+export type CommentEntityType = 'PROJECT' | 'TASK' | 'ISSUE';
+export const commentKeys = { list: (entityType: CommentEntityType, entityId: string) => ['comments', entityType, entityId] as const };
+export const useComments = (entityType: CommentEntityType, entityId: string) => useQuery({ queryKey: commentKeys.list(entityType, entityId), queryFn: async () => (await apiClient.get<{ data: Comment[] }>(`/comments/${entityType}/${entityId}`)).data.data, enabled: Boolean(entityId) });
+export const useCreateComment = (entityType: CommentEntityType, entityId: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async ({ content, mentions }: { content: string; mentions: string[] }) => (await apiClient.post<{ data: Comment }>(`/comments`, { entityType, entityId, content, mentions })).data.data, onSuccess: () => client.invalidateQueries({ queryKey: commentKeys.list(entityType, entityId) }) }); };
+export const useUpdateComment = (entityType: CommentEntityType, entityId: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async ({ id, content, mentions }: { id: string; content: string; mentions: string[] }) => (await apiClient.patch<{ data: Comment }>(`/comments/${id}`, { content, mentions })).data.data, onSuccess: () => client.invalidateQueries({ queryKey: commentKeys.list(entityType, entityId) }) }); };
+export const useDeleteComment = (entityType: CommentEntityType, entityId: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async (id: string) => apiClient.delete(`/comments/${id}`), onSuccess: () => client.invalidateQueries({ queryKey: commentKeys.list(entityType, entityId) }) }); };

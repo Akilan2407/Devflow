@@ -1,0 +1,18 @@
+import type { ReactElement } from 'react';
+import { useState } from 'react';
+import { useAuthStore } from '../stores/auth.store';
+import { useComments, useCreateComment, useDeleteComment, useUpdateComment, type CommentEntityType } from '../features/comments';
+import type { Comment, CommentUser } from '../types/comment';
+
+const userId = (user: CommentUser) => typeof user === 'string' ? user : user._id;
+const userName = (user: CommentUser) => typeof user === 'string' ? user : user.name;
+const avatar = (user: CommentUser) => typeof user === 'string' ? user.slice(0, 1).toUpperCase() : user.avatar;
+const mentionIds = (content: string) => [...content.matchAll(/@([a-f\d]{24})/gi)].map((match) => match[1]);
+
+export const CommentSection = ({ entityType, entityId }: { entityType: CommentEntityType; entityId: string }): ReactElement => {
+  const currentUser = useAuthStore((state) => state.user); const comments = useComments(entityType, entityId); const create = useCreateComment(entityType, entityId); const update = useUpdateComment(entityType, entityId); const remove = useDeleteComment(entityType, entityId); const [content, setContent] = useState(''); const [editing, setEditing] = useState<string | null>(null);
+  const items = comments.data ?? [];
+  const submit = async () => { if (!content.trim()) return; const mentions = mentionIds(content); if (editing) { await update.mutateAsync({ id: editing, content, mentions }); setEditing(null); } else await create.mutateAsync({ content, mentions }); setContent(''); };
+  const edit = (comment: Comment) => { setEditing(comment._id); setContent(comment.content); };
+  return <section className="rounded-xl bg-white p-5 shadow-sm"><h2 className="text-lg font-bold text-slate-900">Comments</h2><div className="mt-4 flex gap-3"><textarea className="input min-h-20" placeholder="Write a comment, use @mentions" value={content} onChange={(event) => setContent(event.target.value)} /><button className="button max-w-fit self-end" onClick={() => void submit()}>{editing ? 'Save' : 'Post'}</button></div>{editing && <button className="mt-2 text-sm font-semibold text-slate-500" onClick={() => { setEditing(null); setContent(''); }}>Cancel edit</button>}<ul className="mt-5 space-y-4">{items.map((comment) => { const mine = currentUser && userId(comment.authorId) === currentUser._id; return <li className="flex gap-3" key={comment._id}><span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-cyan-100 text-sm font-bold text-cyan-800">{typeof comment.authorId !== 'string' && comment.authorId.avatar ? <img className="h-full w-full object-cover" src={comment.authorId.avatar} alt="" /> : avatar(comment.authorId)}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><strong className="text-sm text-slate-900">{userName(comment.authorId)}</strong><time className="text-xs text-slate-400" dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleString()}</time>{mine && <><button className="text-xs font-semibold text-cyan-700" onClick={() => edit(comment)}>Edit</button><button className="text-xs font-semibold text-red-600" onClick={() => void remove.mutateAsync(comment._id)}>Delete</button></>}</div><p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{comment.content.split(/(@\w+)/g).map((part, index) => part.startsWith('@') ? <strong className="text-cyan-700" key={index}>{part}</strong> : part)}</p></div></li>; })}</ul></section>;
+};

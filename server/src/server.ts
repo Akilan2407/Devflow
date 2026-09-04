@@ -14,6 +14,7 @@ import { teamRouter } from './routes/team.routes.js';
 import { projectRouter } from './routes/project.routes.js';
 import { sprintRouter } from './routes/sprint.routes.js';
 import { issueRouter } from './routes/issue.routes.js';
+import { commentRouter } from './routes/comment.routes.js';
 import { taskRouter } from './routes/task.routes.js';
 import { createSocketServer } from './sockets/socket.server.js';
 
@@ -30,6 +31,7 @@ export const createApp = (): express.Express => {
   app.use('/api/projects', projectRouter);
   app.use('/api', sprintRouter);
   app.use('/api', issueRouter);
+  app.use('/api/comments', commentRouter);
   app.use('/api', taskRouter);
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);

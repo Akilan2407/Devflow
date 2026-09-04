@@ -1,4 +1,4 @@
-import { IssueCommentModel } from '../models/issue-comment.model.js';
+import { CommentModel } from '../models/comment.model.js';
 import { IssueHistoryModel } from '../models/issue-history.model.js';
 import { IssueModel, type IssueDocument } from '../models/issue.model.js';
 import { OrganizationMemberModel } from '../models/organization-member.model.js';
@@ -50,7 +50,7 @@ export const issueService = {
     return issue;
   },
   async delete(issue: IssueDocument, organizationId: string, actorId: string): Promise<void> {
-    await Promise.all([IssueCommentModel.deleteMany({ issueId: issue._id }), IssueHistoryModel.deleteMany({ issueId: issue._id }), IssueModel.deleteOne({ _id: issue._id, organizationId })]);
+    await Promise.all([CommentModel.deleteMany({ entityType: 'ISSUE', entityId: issue._id }), IssueHistoryModel.deleteMany({ issueId: issue._id }), IssueModel.deleteOne({ _id: issue._id, organizationId })]);
     await record(organizationId, issue._id.toString(), actorId, 'DELETED');
   },
   async action(issue: IssueDocument, organizationId: string, actorId: string, field: 'status' | 'priority' | 'severity' | 'assigneeId' | 'labels', value: unknown): Promise<IssueDocument> {
@@ -61,8 +61,8 @@ export const issueService = {
     await record(organizationId, issue._id.toString(), actorId, `CHANGED_${field.toUpperCase()}`, field, from, value);
     return issue;
   },
-  async comments(issueId: string) { return IssueCommentModel.find({ issueId }).sort({ createdAt: 1 }).populate('authorId', 'name email avatar'); },
-  async addComment(issue: IssueDocument, organizationId: string, authorId: string, body: string) { const comment = await IssueCommentModel.create({ issueId: issue._id, organizationId, authorId, body }); await record(organizationId, issue._id.toString(), authorId, 'COMMENTED'); return comment.populate('authorId', 'name email avatar'); },
+  async comments(issueId: string) { return CommentModel.find({ entityType: 'ISSUE', entityId: issueId }).sort({ createdAt: 1 }).populate('authorId', 'name email avatar'); },
+  async addComment(issue: IssueDocument, organizationId: string, authorId: string, body: string) { const comment = await CommentModel.create({ entityType: 'ISSUE', entityId: issue._id, organizationId, authorId, content: body, mentions: [] }); await record(organizationId, issue._id.toString(), authorId, 'COMMENTED'); return comment.populate('authorId', 'name email avatar'); },
   async history(issueId: string) { return IssueHistoryModel.find({ issueId }).sort({ createdAt: -1 }).populate('actorId', 'name email avatar'); },
   async linkTask(issue: IssueDocument, taskId: string): Promise<void> { if (!(await TaskModel.exists({ _id: taskId, projectId: issue.projectId, organizationId: issue.organizationId }))) throw new AppError(404, 'Task not found in this project'); },
 };
