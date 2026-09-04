@@ -22,7 +22,7 @@ export const listTasks = async (request: Request, response: Response, next: Next
   try {
     const page = Math.max(Number(request.query.page) || 1, 1);
     const limit = Math.min(Math.max(Number(request.query.limit) || 20, 1), 100);
-    response.json({ data: await taskService.list(param(request.params.projectId), { page, limit, search: queryParam(request.query.search), status: queryParam(request.query.status), priority: queryParam(request.query.priority), type: queryParam(request.query.type), assigneeId: queryParam(request.query.assigneeId), sort: queryParam(request.query.sort) ?? 'position' }) });
+    response.json({ data: await taskService.list(param(request.params.projectId), { page, limit, search: queryParam(request.query.search), status: queryParam(request.query.status), priority: queryParam(request.query.priority), type: queryParam(request.query.type), assigneeId: queryParam(request.query.assigneeId), label: queryParam(request.query.label), sprintId: queryParam(request.query.sprintId), sort: queryParam(request.query.sort) ?? 'position' }) });
   } catch (error) { next(error); }
 };
 

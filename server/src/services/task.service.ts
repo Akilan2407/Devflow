@@ -15,7 +15,7 @@ export const taskService = {
     return TaskModel.create({ ...input, organizationId, projectId, reporterId });
   },
 
-  async list(projectId: string, options: { page: number; limit: number; search?: string; status?: string; priority?: string; type?: string; assigneeId?: string; sort: string }) {
+  async list(projectId: string, options: { page: number; limit: number; search?: string; status?: string; priority?: string; type?: string; assigneeId?: string; label?: string; sprintId?: string; sort: string }) {
     const filter: Record<string, unknown> = { projectId };
     if (options.search) filter.$or = [
       { title: { $regex: options.search, $options: 'i' } },
@@ -26,6 +26,8 @@ export const taskService = {
     if (options.priority) filter.priority = options.priority;
     if (options.type) filter.type = options.type;
     if (options.assigneeId) filter.assigneeId = options.assigneeId;
+    if (options.label) filter.labels = options.label;
+    if (options.sprintId) filter.sprintId = options.sprintId;
     const sort: Record<string, 1 | -1> = options.sort === 'title' ? { title: 1 } : options.sort === '-title' ? { title: -1 } : options.sort === 'priority' ? { priority: 1 } : { position: 1, createdAt: 1 };
     const [items, total] = await Promise.all([
       TaskModel.find(filter).sort(sort).skip((options.page - 1) * options.limit).limit(options.limit),
