@@ -66,6 +66,9 @@ export const OrganizationsPage = (): ReactElement => {
               >
                 Teams
               </Link>
+              <Link className="button max-w-fit" to="/projects">
+                Projects
+              </Link>
               <Link
                 className="button max-w-fit"
                 to={`/organizations/${selectedOrganization._id}/members`}

@@ -11,6 +11,9 @@ import { OrganizationsPage } from './pages/OrganizationsPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { RoleManagementPage } from './pages/RoleManagementPage';
 import { TeamsPage } from './pages/TeamsPage';
+import { ProjectsPage } from './pages/ProjectsPage';
+import { ProjectDetailsPage } from './pages/ProjectDetailsPage';
+import { ProjectSettingsPage } from './pages/ProjectSettingsPage';
 import { useAuthStore } from './stores/auth.store';
 import './styles.css';
 
@@ -33,6 +36,9 @@ export const App = (): ReactElement => {
             <Route path="/organizations/:id/roles" element={<RoleManagementPage />} />
             <Route path="/organizations/:id/settings" element={<OrganizationSettingsPage />} />
             <Route path="/organizations/:organizationId/teams" element={<TeamsPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:projectId" element={<ProjectDetailsPage />} />
+            <Route path="/projects/:projectId/settings" element={<ProjectSettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/organizations" replace />} />
         </Routes>
