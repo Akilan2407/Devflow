@@ -1,0 +1,13 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../lib/api';
+import type { Sprint, SprintDetails } from '../types/sprint';
+
+export type SprintInput = { name: string; goal?: string; startDate: string; endDate: string };
+export const sprintKeys = { all: ['sprints'] as const, list: (projectId: string) => ['sprints', projectId] as const, detail: (id: string) => ['sprint', id] as const };
+export const useSprints = (projectId: string | undefined) => useQuery({ queryKey: sprintKeys.list(projectId ?? ''), queryFn: async () => (await apiClient.get<{ data: Sprint[] }>(`/projects/${projectId}/sprints`)).data.data, enabled: Boolean(projectId) });
+export const useSprint = (id: string | undefined) => useQuery({ queryKey: sprintKeys.detail(id ?? ''), queryFn: async () => (await apiClient.get<{ data: SprintDetails }>(`/sprints/${id}`)).data.data, enabled: Boolean(id) });
+export const useCreateSprint = (projectId: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async (input: SprintInput) => (await apiClient.post<{ data: Sprint }>(`/projects/${projectId}/sprints`, input)).data.data, onSuccess: () => client.invalidateQueries({ queryKey: sprintKeys.list(projectId) }) }); };
+export const useUpdateSprint = (id: string, projectId: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async (input: Partial<SprintInput>) => (await apiClient.patch<{ data: Sprint }>(`/sprints/${id}`, input)).data.data, onSuccess: () => { void client.invalidateQueries({ queryKey: sprintKeys.detail(id) }); void client.invalidateQueries({ queryKey: sprintKeys.list(projectId) }); } }); };
+export const useSprintAction = (id: string, projectId: string, action: 'start' | 'complete') => { const client = useQueryClient(); return useMutation({ mutationFn: async () => (await apiClient.post<{ data: Sprint }>(`/sprints/${id}/${action}`)).data.data, onSuccess: () => { void client.invalidateQueries({ queryKey: sprintKeys.detail(id) }); void client.invalidateQueries({ queryKey: sprintKeys.list(projectId) }); } }); };
+export const useDeleteSprint = (id: string, projectId: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async () => apiClient.delete(`/sprints/${id}`), onSuccess: () => client.invalidateQueries({ queryKey: sprintKeys.list(projectId) }) }); };
+export const useSprintTaskMutation = (id: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async ({ taskId, remove }: { taskId: string; remove?: boolean }) => remove ? apiClient.delete(`/sprints/${id}/tasks/${taskId}`) : apiClient.post(`/sprints/${id}/tasks/${taskId}`), onSuccess: () => client.invalidateQueries({ queryKey: sprintKeys.detail(id) }) }); };

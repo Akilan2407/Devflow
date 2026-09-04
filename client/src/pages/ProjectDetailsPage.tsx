@@ -12,6 +12,9 @@ import type { Task } from '../types/task';
 import { useState } from 'react';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { KanbanFilters } from '../components/KanbanFilters';
+import { SprintPlanning } from '../components/SprintPlanning';
+import { SprintDetails } from '../components/SprintDetails';
+import type { Sprint } from '../types/sprint';
 
 export const ProjectDetailsPage = (): ReactElement => {
   const { projectId } = useParams();
@@ -20,8 +23,9 @@ export const ProjectDetailsPage = (): ReactElement => {
   const archive = useArchiveProject(projectId ?? '');
   const [filters, setFilters] = useState<TaskFilterValues>({ limit: 100 });
   const [selectedTask, setSelectedTask] = useState<Task | undefined>();
+  const [selectedSprint, setSelectedSprint] = useState<Sprint | undefined>();
   const tasks = useTasks(projectId, filters);
   if (project.isLoading) return <main className="min-h-screen bg-slate-100 p-6">Loading project...</main>;
   if (!project.data) return <main className="min-h-screen bg-slate-100 p-6">Project not found.</main>;
-  return <main className="min-h-screen bg-slate-100 p-6 text-slate-900"><div className="mx-auto max-w-7xl space-y-6"><ProjectHeader project={project.data} onArchive={() => void archive.mutateAsync().then(() => void project.refetch())} /><TaskForm projectId={project.data._id} onSaved={() => void tasks.refetch()} /><KanbanFilters filters={filters} onChange={setFilters} />{tasks.isLoading ? <p>Loading tasks...</p> : <KanbanBoard projectId={project.data._id} filters={filters} tasks={tasks.data?.items ?? []} onSelect={setSelectedTask} />}{selectedTask && <TaskDetails task={selectedTask} onChanged={setSelectedTask} onDeleted={() => { setSelectedTask(undefined); void tasks.refetch(); }} />}<button className="text-sm font-semibold text-cyan-700" onClick={() => navigate('/projects')}>Back to projects</button></div></main>;
+  return <main className="min-h-screen bg-slate-100 p-6 text-slate-900"><div className="mx-auto max-w-7xl space-y-6"><ProjectHeader project={project.data} onArchive={() => void archive.mutateAsync().then(() => void project.refetch())} /><SprintPlanning projectId={project.data._id} onSelect={setSelectedSprint} />{selectedSprint && <SprintDetails sprint={selectedSprint} projectId={project.data._id} availableTasks={tasks.data?.items ?? []} onChanged={() => { setSelectedSprint(undefined); void tasks.refetch(); }} />}<TaskForm projectId={project.data._id} onSaved={() => void tasks.refetch()} /><KanbanFilters filters={filters} onChange={setFilters} />{tasks.isLoading ? <p>Loading tasks...</p> : <KanbanBoard projectId={project.data._id} filters={filters} tasks={tasks.data?.items ?? []} onSelect={setSelectedTask} />}{selectedTask && <TaskDetails task={selectedTask} onChanged={setSelectedTask} onDeleted={() => { setSelectedTask(undefined); void tasks.refetch(); }} />}<button className="text-sm font-semibold text-cyan-700" onClick={() => navigate('/projects')}>Back to projects</button></div></main>;
 };
