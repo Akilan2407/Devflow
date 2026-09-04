@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+}
+
+.auth-page {
+  @apply flex min-h-screen items-center justify-center bg-slate-100 px-4;
+}
+
+.input {
+  @apply w-full rounded-lg border border-slate-200 px-4 py-3 text-slate-900 outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-100;
+}
+
+.button {
+  @apply w-full rounded-lg bg-cyan-700 px-4 py-3 font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60;
+}
