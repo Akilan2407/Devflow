@@ -1,0 +1,4 @@
+import type { ReactElement } from 'react';
+import type { Task } from '../types/task';
+
+export const TaskCard = ({ task, onSelect }: { task: Task; onSelect: () => void }): ReactElement => <button className="w-full rounded-lg border border-slate-200 bg-white p-4 text-left transition hover:border-cyan-500 hover:shadow-sm" onClick={onSelect}><div className="flex items-start justify-between gap-3"><h3 className="font-bold text-slate-900">{task.title}</h3><span className="text-xs font-bold uppercase text-slate-400">{task.priority}</span></div><p className="mt-2 text-xs font-semibold uppercase tracking-wide text-cyan-700">{task.type} · {task.status.replace('_', ' ')}</p><p className="mt-3 line-clamp-2 text-sm text-slate-500">{task.description || 'No description'}</p><div className="mt-3 flex gap-2">{task.labels.map((label) => <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600" key={label}>{label}</span>)}</div></button>;

@@ -1,0 +1,22 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.middleware.js';
+import { requirePermission } from '../middleware/organization.middleware.js';
+import { requireTaskAccess, requireTaskProjectAccess } from '../middleware/task.middleware.js';
+import { addLabel, assignTask, changePriority, changeStatus, createTask, deleteTask, getTask, listTasks, removeLabel, replaceLabels, setDueDate, setStoryPoints, updatePosition, updateTask } from '../controllers/task.controller.js';
+
+export const taskRouter = Router();
+taskRouter.use(requireAuth);
+taskRouter.post('/projects/:projectId/tasks', requireTaskProjectAccess, requirePermission('task:create'), createTask);
+taskRouter.get('/projects/:projectId/tasks', requireTaskProjectAccess, requirePermission('task:read'), listTasks);
+taskRouter.get('/tasks/:id', requireTaskAccess, requirePermission('task:read'), getTask);
+taskRouter.patch('/tasks/:id', requireTaskAccess, requirePermission('task:update'), updateTask);
+taskRouter.delete('/tasks/:id', requireTaskAccess, requirePermission('task:delete'), deleteTask);
+taskRouter.post('/tasks/:id/assign', requireTaskAccess, requirePermission('task:update'), assignTask);
+taskRouter.post('/tasks/:id/priority', requireTaskAccess, requirePermission('task:update'), changePriority);
+taskRouter.post('/tasks/:id/status', requireTaskAccess, requirePermission('task:update'), changeStatus);
+taskRouter.post('/tasks/:id/position', requireTaskAccess, requirePermission('task:update'), updatePosition);
+taskRouter.post('/tasks/:id/due-date', requireTaskAccess, requirePermission('task:update'), setDueDate);
+taskRouter.post('/tasks/:id/story-points', requireTaskAccess, requirePermission('task:update'), setStoryPoints);
+taskRouter.post('/tasks/:id/labels', requireTaskAccess, requirePermission('task:update'), addLabel);
+taskRouter.put('/tasks/:id/labels', requireTaskAccess, requirePermission('task:update'), replaceLabels);
+taskRouter.delete('/tasks/:id/labels/:label', requireTaskAccess, requirePermission('task:update'), removeLabel);

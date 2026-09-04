@@ -12,6 +12,7 @@ import { authRouter } from './routes/auth.routes.js';
 import { organizationRouter } from './routes/organization.routes.js';
 import { teamRouter } from './routes/team.routes.js';
 import { projectRouter } from './routes/project.routes.js';
+import { taskRouter } from './routes/task.routes.js';
 import { createSocketServer } from './sockets/socket.server.js';
 
 export const createApp = (): express.Express => {
@@ -25,6 +26,7 @@ export const createApp = (): express.Express => {
   app.use('/api/organizations', organizationRouter);
   app.use('/api', teamRouter);
   app.use('/api/projects', projectRouter);
+  app.use('/api', taskRouter);
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
   return app;

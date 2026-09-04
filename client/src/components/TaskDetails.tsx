@@ -1,0 +1,10 @@
+import type { ReactElement } from 'react';
+import { useState } from 'react';
+import { useDeleteTask, useUpdateTask, type TaskInput } from '../features/tasks';
+import type { Task, TaskPriority, TaskStatus } from '../types/task';
+
+export const TaskDetails = ({ task, onChanged, onDeleted }: { task: Task; onChanged: (task: Task) => void; onDeleted: () => void }): ReactElement => {
+  const [status, setStatus] = useState<TaskStatus>(task.status); const [priority, setPriority] = useState<TaskPriority>(task.priority); const update = useUpdateTask(task._id); const remove = useDeleteTask(task._id);
+  const save = async (values: Partial<TaskInput>) => onChanged(await update.mutateAsync(values));
+  return <aside className="rounded-xl bg-white p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-cyan-700">{task.type}</p><h2 className="mt-1 text-xl font-bold text-slate-900">{task.title}</h2></div><button className="text-sm font-semibold text-red-600" onClick={() => void remove.mutateAsync().then(onDeleted)}>Delete</button></div><p className="mt-4 text-sm text-slate-500">{task.description || 'No description'}</p><label className="mt-6 block text-sm font-semibold">Status<select className="input mt-2" value={status} onChange={(event) => { const value = event.target.value as TaskStatus; setStatus(value); void save({ status: value }); }}><option value="TODO">To do</option><option value="IN_PROGRESS">In progress</option><option value="IN_REVIEW">In review</option><option value="DONE">Done</option></select></label><label className="mt-4 block text-sm font-semibold">Priority<select className="input mt-2" value={priority} onChange={(event) => { const value = event.target.value as TaskPriority; setPriority(value); void save({ priority: value }); }}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></label><p className="mt-5 text-xs text-slate-400">{task.storyPoints ?? 'No'} story points</p></aside>;
+};

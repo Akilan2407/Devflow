@@ -29,8 +29,12 @@ export const requireProjectOrganizationAccess: RequestHandler = (request, respon
 };
 
 export const requireProjectAccess: RequestHandler = (request, response, next) => {
+  return requireProjectParamAccess('id')(request, response, next);
+};
+
+export const requireProjectParamAccess = (projectParam: string): RequestHandler => (request, response, next) => {
   void (async () => {
-    const project = await ProjectModel.findById(request.params.id);
+    const project = await ProjectModel.findById(request.params[projectParam]);
     if (!project || !(await setOrganization(request, project.organizationId.toString())) ) {
       response.status(404).json({ error: { message: 'Project not found' } });
       return;
