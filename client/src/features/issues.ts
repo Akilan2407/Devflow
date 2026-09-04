@@ -1,0 +1,13 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../lib/api';
+import type { Issue, IssueDetails } from '../types/issue';
+
+export type IssueFilters = { search?: string; type?: string; status?: string; priority?: string; severity?: string; assigneeId?: string; label?: string; sprintId?: string; sort?: string };
+export type IssueInput = { title: string; description?: string; type?: Issue['type']; status?: Issue['status']; priority?: Issue['priority']; severity?: Issue['severity']; assigneeId?: string | null; labels?: string[]; sprintId?: string | null };
+export const issueKeys = { all: ['issues'] as const, list: (projectId: string, filters: IssueFilters) => ['issues', projectId, filters] as const, detail: (id: string) => ['issue', id] as const };
+export const useIssues = (projectId: string | undefined, filters: IssueFilters) => useQuery({ queryKey: issueKeys.list(projectId ?? '', filters), queryFn: async () => (await apiClient.get<{ data: { items: Issue[] } }>(`/projects/${projectId}/issues`, { params: { ...filters, limit: 100 } })).data.data, enabled: Boolean(projectId) });
+export const useIssue = (id: string | undefined) => useQuery({ queryKey: issueKeys.detail(id ?? ''), queryFn: async () => (await apiClient.get<{ data: IssueDetails }>(`/issues/${id}`)).data.data, enabled: Boolean(id) });
+export const useCreateIssue = (projectId: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async (input: IssueInput) => (await apiClient.post<{ data: Issue }>(`/projects/${projectId}/issues`, input)).data.data, onSuccess: () => client.invalidateQueries({ queryKey: issueKeys.all }) }); };
+export const useUpdateIssue = (id: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async (input: Partial<IssueInput>) => (await apiClient.patch<{ data: Issue }>(`/issues/${id}`, input)).data.data, onSuccess: () => { void client.invalidateQueries({ queryKey: issueKeys.all }); void client.invalidateQueries({ queryKey: issueKeys.detail(id) }); } }); };
+export const useDeleteIssue = (id: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async () => apiClient.delete(`/issues/${id}`), onSuccess: () => client.invalidateQueries({ queryKey: issueKeys.all }) }); };
+export const useAddIssueComment = (id: string) => { const client = useQueryClient(); return useMutation({ mutationFn: async (body: string) => apiClient.post(`/issues/${id}/comments`, { body }), onSuccess: () => client.invalidateQueries({ queryKey: issueKeys.detail(id) }) }); };

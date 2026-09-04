@@ -14,6 +14,7 @@ import { TeamsPage } from './pages/TeamsPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { ProjectDetailsPage } from './pages/ProjectDetailsPage';
 import { ProjectSettingsPage } from './pages/ProjectSettingsPage';
+import { ProjectIssuesPage } from './pages/ProjectIssuesPage';
 import { useAuthStore } from './stores/auth.store';
 import './styles.css';
 
@@ -39,6 +40,7 @@ export const App = (): ReactElement => {
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:projectId" element={<ProjectDetailsPage />} />
             <Route path="/projects/:projectId/settings" element={<ProjectSettingsPage />} />
+            <Route path="/projects/:projectId/issues" element={<ProjectIssuesPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/organizations" replace />} />
         </Routes>

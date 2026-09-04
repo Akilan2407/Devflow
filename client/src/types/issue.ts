@@ -1,0 +1,9 @@
+export type IssueType = 'BUG' | 'FEATURE' | 'TASK' | 'IMPROVEMENT';
+export type IssueSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REOPENED';
+export type IssuePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type IssueUser = string | { _id: string; name: string; email: string; avatar?: string | null };
+export type Issue = { _id: string; organizationId: string; projectId: string; title: string; description: string; type: IssueType; status: IssueStatus; priority: IssuePriority; severity: IssueSeverity; reporterId: IssueUser; assigneeId: IssueUser | null; labels: string[]; sprintId: string | null; createdAt: string; updatedAt: string };
+export type IssueComment = { _id: string; authorId: IssueUser; body: string; createdAt: string };
+export type IssueHistory = { _id: string; actorId: IssueUser; action: string; field: string | null; from: unknown; to: unknown; createdAt: string };
+export type IssueDetails = { issue: Issue; comments: IssueComment[]; history: IssueHistory[] };

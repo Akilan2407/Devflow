@@ -1,0 +1,4 @@
+import type { ReactElement } from 'react';
+import type { IssueHistory as History, IssueUser } from '../types/issue';
+const name = (user: IssueUser) => typeof user === 'string' ? user : user.name;
+export const IssueHistory = ({ history }: { history: History[] }): ReactElement => <section><h3 className="font-bold text-slate-900">History</h3><ul className="mt-3 space-y-2">{history.map((entry) => <li key={entry._id} className="text-sm text-slate-600"><strong>{name(entry.actorId)}</strong> {entry.action.toLowerCase().replace('_', ' ')}{entry.field ? ` ${entry.field}` : ''}<span className="ml-2 text-xs text-slate-400">{new Date(entry.createdAt).toLocaleString()}</span></li>)}</ul></section>;

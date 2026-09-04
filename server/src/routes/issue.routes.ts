@@ -1,0 +1,21 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.middleware.js';
+import { requirePermission } from '../middleware/organization.middleware.js';
+import { requireIssueAccess, requireIssueProjectAccess } from '../middleware/issue.middleware.js';
+import { addIssueComment, assignIssue, changeIssuePriority, changeIssueSeverity, changeIssueStatus, createIssue, deleteIssue, getIssue, getIssueComments, getIssueHistory, listIssues, replaceIssueLabels, updateIssue } from '../controllers/issue.controller.js';
+
+export const issueRouter = Router();
+issueRouter.use(requireAuth);
+issueRouter.post('/projects/:projectId/issues', requireIssueProjectAccess, requirePermission('issue:create'), createIssue);
+issueRouter.get('/projects/:projectId/issues', requireIssueProjectAccess, requirePermission('issue:read'), listIssues);
+issueRouter.get('/issues/:id', requireIssueAccess, requirePermission('issue:read'), getIssue);
+issueRouter.patch('/issues/:id', requireIssueAccess, requirePermission('issue:update'), updateIssue);
+issueRouter.delete('/issues/:id', requireIssueAccess, requirePermission('issue:delete'), deleteIssue);
+issueRouter.post('/issues/:id/assign', requireIssueAccess, requirePermission('issue:update'), assignIssue);
+issueRouter.post('/issues/:id/status', requireIssueAccess, requirePermission('issue:update'), changeIssueStatus);
+issueRouter.post('/issues/:id/priority', requireIssueAccess, requirePermission('issue:update'), changeIssuePriority);
+issueRouter.post('/issues/:id/severity', requireIssueAccess, requirePermission('issue:update'), changeIssueSeverity);
+issueRouter.put('/issues/:id/labels', requireIssueAccess, requirePermission('issue:update'), replaceIssueLabels);
+issueRouter.get('/issues/:id/comments', requireIssueAccess, requirePermission('issue:read'), getIssueComments);
+issueRouter.post('/issues/:id/comments', requireIssueAccess, requirePermission('issue:update'), addIssueComment);
+issueRouter.get('/issues/:id/history', requireIssueAccess, requirePermission('issue:read'), getIssueHistory);
