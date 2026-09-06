@@ -16,6 +16,8 @@ import { ProjectDetailsPage } from './pages/ProjectDetailsPage';
 import { ProjectSettingsPage } from './pages/ProjectSettingsPage';
 import { ProjectIssuesPage } from './pages/ProjectIssuesPage';
 import { useAuthStore } from './stores/auth.store';
+import { NotificationBell } from './components/NotificationBell';
+import { NotificationPage } from './pages/NotificationPage';
 import './styles.css';
 
 const queryClient = new QueryClient();
@@ -28,6 +30,7 @@ export const App = (): ReactElement => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <div className="fixed right-5 top-5 z-40"><NotificationBell /></div>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -41,6 +44,7 @@ export const App = (): ReactElement => {
             <Route path="/projects/:projectId" element={<ProjectDetailsPage />} />
             <Route path="/projects/:projectId/settings" element={<ProjectSettingsPage />} />
             <Route path="/projects/:projectId/issues" element={<ProjectIssuesPage />} />
+            <Route path="/notifications" element={<NotificationPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/organizations" replace />} />
         </Routes>

@@ -1,0 +1,12 @@
+import { useState, type ReactElement } from 'react';
+import { useDeleteNotification, useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '../features/notifications';
+
+export const NotificationPage = (): ReactElement => {
+  const [page, setPage] = useState(1);
+  const notifications = useNotifications(page, 20);
+  const markRead = useMarkNotificationRead();
+  const markAll = useMarkAllNotificationsRead();
+  const remove = useDeleteNotification();
+  const data = notifications.data;
+  return <main className="min-h-screen bg-slate-100 p-6 text-slate-900"><div className="mx-auto max-w-3xl space-y-5"><header className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">Activity center</p><h1 className="text-3xl font-bold">Notifications</h1></div><button className="button max-w-fit" type="button" onClick={() => void markAll.mutateAsync()}>Mark all read</button></header><section className="overflow-hidden rounded-xl bg-white shadow-sm">{notifications.isLoading ? <p className="p-8">Loading notifications...</p> : data?.items.length ? data.items.map((item) => <article className={`flex items-start gap-4 border-b border-slate-100 p-4 last:border-0 ${item.isRead ? 'opacity-60' : ''}`} key={item._id}><div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-cyan-600" /><div className="min-w-0 flex-1"><h2 className="font-semibold">{item.title}</h2><p className="mt-1 text-sm text-slate-600">{item.message}</p><time className="mt-2 block text-xs text-slate-400">{new Date(item.createdAt).toLocaleString()}</time></div><div className="flex shrink-0 gap-2 text-xs font-semibold text-cyan-700">{!item.isRead && <button type="button" onClick={() => void markRead.mutateAsync(item._id)}>Read</button>}<button className="text-rose-600" type="button" onClick={() => void remove.mutateAsync(item._id)}>Delete</button></div></article>) : <p className="p-10 text-center text-slate-500">You are all caught up.</p>}</section>{data && data.pagination.pages > 1 && <nav className="flex items-center justify-between"><button className="button max-w-fit" disabled={page <= 1} type="button" onClick={() => setPage((value) => value - 1)}>Previous</button><span className="text-sm text-slate-500">Page {page} of {data.pagination.pages}</span><button className="button max-w-fit" disabled={page >= data.pagination.pages} type="button" onClick={() => setPage((value) => value + 1)}>Next</button></nav>}</div></main>;
+};

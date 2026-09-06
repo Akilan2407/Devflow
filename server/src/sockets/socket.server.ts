@@ -9,6 +9,7 @@ import { IssueModel } from '../models/issue.model.js';
 import { UserModel } from '../models/user.model.js';
 import { verifyAccessToken } from '../utils/jwt.utils.js';
 import { setSocketServer } from './socket.events.js';
+import { notificationRoom } from './socket.events.js';
 
 type AuthenticatedSocket = Socket & { userId?: string; userName?: string };
 const roomId = (room: string, prefix: string): string | null => room.startsWith(prefix) ? room.slice(prefix.length) : null;
@@ -48,6 +49,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
   });
   io.on('connection', (socket) => {
     const authenticatedSocket = socket as AuthenticatedSocket;
+    void socket.join(notificationRoom(authenticatedSocket.userId as string));
     socket.on('join-room', async (room: unknown, acknowledge?: (result: { ok: boolean; message?: string }) => void) => {
       if (typeof room !== 'string' || !/^(organization|project|task|issue):[a-f\d]{24}$/i.test(room) || !(await canJoinRoom(socket, room))) {
         acknowledge?.({ ok: false, message: 'Room access denied' });

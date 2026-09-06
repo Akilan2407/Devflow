@@ -4,6 +4,7 @@ import type { OrganizationRequest } from '../types/organization.types.js';
 import type { ProjectRequest } from '../middleware/project.middleware.js';
 import { createProjectSchema, projectMemberSchema, updateProjectSchema } from '../validators/project.validators.js';
 import { emitSocketEvent, organizationRoom, projectRoom, SocketEvent } from '../sockets/socket.events.js';
+import { notificationService } from '../services/notification.service.js';
 
 const projectParam = (value: string | string[] | undefined): string => {
   if (typeof value !== 'string') throw new Error('Invalid route parameter');
@@ -50,7 +51,7 @@ export const deleteProject = async (request: Request, response: Response, next: 
 };
 
 export const addProjectMember = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { response.json({ data: await projectService.addMember((request as unknown as ProjectRequest).project, projectMemberSchema.parse(request.body)) }); } catch (error) { next(error); }
+  try { const value = request as unknown as ProjectRequest; const input = projectMemberSchema.parse(request.body); const project = await projectService.addMember(value.project, input); if (input.userId !== value.user._id.toString()) await notificationService.notify({ organizationId: value.project.organizationId.toString(), userId: input.userId, projectId: value.project._id.toString(), type: 'PROJECT_INVITATION', title: 'Added to a project', message: value.project.name, entityType: 'PROJECT', entityId: value.project._id.toString(), dedupeKey: `project-invitation:${value.project._id}:${input.userId}` }); response.json({ data: project }); } catch (error) { next(error); }
 };
 
 export const removeProjectMember = async (request: Request, response: Response, next: NextFunction): Promise<void> => {

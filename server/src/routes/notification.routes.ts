@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.middleware.js';
+import { createNotification, deleteNotification, getNotifications, markAllNotificationsRead, markNotificationRead } from '../controllers/notification.controller.js';
+export const notificationRouter = Router();
+notificationRouter.use(requireAuth);
+notificationRouter.get('/', getNotifications);
+notificationRouter.post('/', createNotification);
+notificationRouter.post('/read-all', markAllNotificationsRead);
+notificationRouter.post('/:id/read', markNotificationRead);
+notificationRouter.delete('/:id', deleteNotification);

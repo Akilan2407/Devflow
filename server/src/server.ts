@@ -18,6 +18,7 @@ import { commentRouter } from './routes/comment.routes.js';
 import { taskRouter } from './routes/task.routes.js';
 import { messageRouter } from './routes/message.routes.js';
 import { createSocketServer } from './sockets/socket.server.js';
+import { notificationRouter } from './routes/notification.routes.js';
 
 export const createApp = (): express.Express => {
   const app = express();
@@ -35,6 +36,7 @@ export const createApp = (): express.Express => {
   app.use('/api/comments', commentRouter);
   app.use('/api', taskRouter);
   app.use('/api', messageRouter);
+  app.use('/api/notifications', notificationRouter);
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
   return app;

@@ -7,6 +7,7 @@ export const SocketEvent = {
   PROJECT_UPDATED: 'PROJECT_UPDATED',
   MESSAGE_SENT: 'MESSAGE_SENT', MESSAGE_UPDATED: 'MESSAGE_UPDATED', MESSAGE_DELETED: 'MESSAGE_DELETED', MESSAGE_READ: 'MESSAGE_READ',
   USER_TYPING: 'USER_TYPING', USER_STOPPED_TYPING: 'USER_STOPPED_TYPING', USER_ONLINE: 'USER_ONLINE', USER_OFFLINE: 'USER_OFFLINE',
+  NOTIFICATION_CREATED: 'NOTIFICATION_CREATED',
 } as const;
 export type SocketEventName = (typeof SocketEvent)[keyof typeof SocketEvent];
 let socketServer: Server | null = null;
@@ -20,3 +21,4 @@ export const projectRoom = (id: string): string => `project:${id}`;
 export const taskRoom = (id: string): string => `task:${id}`;
 export const issueRoom = (id: string): string => `issue:${id}`;
 export const messageRoom = (id: string): string => `message:${id}`;
+export const notificationRoom = (id: string): string => `user:${id}`;
