@@ -5,6 +5,7 @@ import type { ProjectRequest } from '../middleware/project.middleware.js';
 import { createProjectSchema, projectMemberSchema, updateProjectSchema } from '../validators/project.validators.js';
 import { emitSocketEvent, organizationRoom, projectRoom, SocketEvent } from '../sockets/socket.events.js';
 import { notificationService } from '../services/notification.service.js';
+import { createActivityLog } from '../services/activity-log.service.js';
 
 const projectParam = (value: string | string[] | undefined): string => {
   if (typeof value !== 'string') throw new Error('Invalid route parameter');
@@ -19,6 +20,7 @@ export const createProject = async (request: Request, response: Response, next: 
   try {
     const input = createProjectSchema.parse(request.body);
     const project = await projectService.create((request as unknown as OrganizationRequest).user._id.toString(), input);
+    await createActivityLog({ organizationId: project.organizationId.toString(), userId: (request as unknown as OrganizationRequest).user._id.toString(), action: 'PROJECT_CREATED', entityType: 'PROJECT', entityId: project._id.toString(), description: `Project ${project.name} created` });
     response.status(201).json({ data: project });
   } catch (error) { next(error); }
 };
@@ -39,11 +41,11 @@ export const getProject = (request: Request, response: Response): void => {
 };
 
 export const updateProject = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { const value = request as unknown as ProjectRequest; const project = await projectService.update(value.project, updateProjectSchema.parse(request.body)); emitSocketEvent(SocketEvent.PROJECT_UPDATED, [organizationRoom(value.project.organizationId.toString()), projectRoom(value.project._id.toString())], project); response.json({ data: project }); } catch (error) { next(error); }
+  try { const value = request as unknown as ProjectRequest; const project = await projectService.update(value.project, updateProjectSchema.parse(request.body)); await createActivityLog({ organizationId: project.organizationId.toString(), userId: value.user._id.toString(), action: 'PROJECT_UPDATED', entityType: 'PROJECT', entityId: project._id.toString(), description: `Project ${project.name} updated` }); emitSocketEvent(SocketEvent.PROJECT_UPDATED, [organizationRoom(value.project.organizationId.toString()), projectRoom(value.project._id.toString())], project); response.json({ data: project }); } catch (error) { next(error); }
 };
 
 export const archiveProject = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { const value = request as unknown as ProjectRequest; const project = await projectService.archive(value.project); emitSocketEvent(SocketEvent.PROJECT_UPDATED, [organizationRoom(value.project.organizationId.toString()), projectRoom(value.project._id.toString())], project); response.json({ data: project }); } catch (error) { next(error); }
+  try { const value = request as unknown as ProjectRequest; const project = await projectService.archive(value.project); await createActivityLog({ organizationId: project.organizationId.toString(), userId: value.user._id.toString(), action: 'PROJECT_UPDATED', entityType: 'PROJECT', entityId: project._id.toString(), description: `Project ${project.name} updated`, metadata: { status: project.status } }); emitSocketEvent(SocketEvent.PROJECT_UPDATED, [organizationRoom(value.project.organizationId.toString()), projectRoom(value.project._id.toString())], project); response.json({ data: project }); } catch (error) { next(error); }
 };
 
 export const deleteProject = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
@@ -51,9 +53,9 @@ export const deleteProject = async (request: Request, response: Response, next: 
 };
 
 export const addProjectMember = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { const value = request as unknown as ProjectRequest; const input = projectMemberSchema.parse(request.body); const project = await projectService.addMember(value.project, input); if (input.userId !== value.user._id.toString()) await notificationService.notify({ organizationId: value.project.organizationId.toString(), userId: input.userId, projectId: value.project._id.toString(), type: 'PROJECT_INVITATION', title: 'Added to a project', message: value.project.name, entityType: 'PROJECT', entityId: value.project._id.toString(), dedupeKey: `project-invitation:${value.project._id}:${input.userId}` }); response.json({ data: project }); } catch (error) { next(error); }
+  try { const value = request as unknown as ProjectRequest; const input = projectMemberSchema.parse(request.body); const project = await projectService.addMember(value.project, input); await createActivityLog({ organizationId: project.organizationId.toString(), userId: value.user._id.toString(), action: 'MEMBER_ADDED', entityType: 'PROJECT', entityId: project._id.toString(), description: `Member added to project ${project.name}`, metadata: { memberId: input.userId } }); if (input.userId !== value.user._id.toString()) await notificationService.notify({ organizationId: value.project.organizationId.toString(), userId: input.userId, projectId: value.project._id.toString(), type: 'PROJECT_INVITATION', title: 'Added to a project', message: value.project.name, entityType: 'PROJECT', entityId: value.project._id.toString(), dedupeKey: `project-invitation:${value.project._id}:${input.userId}` }); response.json({ data: project }); } catch (error) { next(error); }
 };
 
 export const removeProjectMember = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { response.json({ data: await projectService.removeMember((request as unknown as ProjectRequest).project, projectParam(request.params.userId)) }); } catch (error) { next(error); }
+  try { const value = request as unknown as ProjectRequest; const project = await projectService.removeMember(value.project, projectParam(request.params.userId)); await createActivityLog({ organizationId: project.organizationId.toString(), userId: value.user._id.toString(), action: 'MEMBER_REMOVED', entityType: 'PROJECT', entityId: project._id.toString(), description: `Member removed from project ${project.name}`, metadata: { memberId: request.params.userId } }); response.json({ data: project }); } catch (error) { next(error); }
 };

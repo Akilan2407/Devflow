@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { organizationService } from '../services/organization.service.js';
 import type { OrganizationRequest } from '../types/organization.types.js';
+import { createActivityLog } from '../services/activity-log.service.js';
 import {
   createOrganizationSchema,
   memberInviteSchema,
@@ -86,10 +87,12 @@ export const inviteMember = async (
 ): Promise<void> => {
   try {
     const organizationRequest = request as unknown as OrganizationRequest;
+    const input = memberInviteSchema.parse(request.body);
     await organizationService.invite(
       organizationRequest.organization._id.toString(),
-      memberInviteSchema.parse(request.body),
+      input,
     );
+    await createActivityLog({ organizationId: organizationRequest.organization._id.toString(), userId: organizationRequest.user._id.toString(), action: 'MEMBER_ADDED', entityType: 'ORGANIZATION', entityId: organizationRequest.organization._id.toString(), description: `Member with email ${input.email} added`, metadata: { role: input.role } });
     response.status(201).json({ data: { message: 'Member added' } });
   } catch (error) {
     next(error);
@@ -102,10 +105,9 @@ export const removeMember = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    await organizationService.remove(
-      (request as unknown as OrganizationRequest).organization,
-      requiredParam(request.params.userId),
-    );
+    const value = request as unknown as OrganizationRequest; const memberId = requiredParam(request.params.userId);
+    await organizationService.remove(value.organization, memberId);
+    await createActivityLog({ organizationId: value.organization._id.toString(), userId: value.user._id.toString(), action: 'MEMBER_REMOVED', entityType: 'ORGANIZATION', entityId: value.organization._id.toString(), description: 'Organization member removed', metadata: { memberId } });
     response.status(204).send();
   } catch (error) {
     next(error);
@@ -119,11 +121,9 @@ export const changeMemberRole = async (
 ): Promise<void> => {
   try {
     const { role } = memberRoleSchema.parse(request.body);
-    await organizationService.changeRole(
-      (request as unknown as OrganizationRequest).organization,
-      requiredParam(request.params.userId),
-      role,
-    );
+    const value = request as unknown as OrganizationRequest; const memberId = requiredParam(request.params.userId);
+    await organizationService.changeRole(value.organization, memberId, role);
+    await createActivityLog({ organizationId: value.organization._id.toString(), userId: value.user._id.toString(), action: 'ROLE_CHANGED', entityType: 'ORGANIZATION_MEMBER', entityId: memberId, description: 'Organization member role changed', metadata: { memberId, role } });
     response.status(204).send();
   } catch (error) {
     next(error);

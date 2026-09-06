@@ -2,6 +2,8 @@ import type { NextFunction, Request, Response } from 'express';
 import { authService } from '../services/auth.service.js';
 import { loginSchema, registerSchema } from '../validators/auth.validators.js';
 import type { AuthenticatedRequest } from '../types/auth.types.js';
+import { createActivityLog } from '../services/activity-log.service.js';
+import { verifyRefreshToken } from '../utils/jwt.utils.js';
 
 const refreshCookie = 'devflow_refresh_token';
 const cookieOptions = {
@@ -38,6 +40,7 @@ export const login = async (
 ): Promise<void> => {
   try {
     const result = await authService.login(loginSchema.parse(request.body));
+    await createActivityLog({ userId: result.user._id.toString(), action: 'LOGIN', entityType: 'USER', entityId: result.user._id.toString(), description: 'User logged in' });
     setRefreshCookie(response, result.tokens.refreshToken);
     response
       .status(200)
@@ -53,9 +56,9 @@ export const logout = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    await authService.logout(
-      request.signedCookies?.[refreshCookie] ?? request.cookies?.[refreshCookie],
-    );
+    const refreshToken = request.signedCookies?.[refreshCookie] ?? request.cookies?.[refreshCookie];
+    await authService.logout(refreshToken);
+    if (refreshToken) { try { const payload = verifyRefreshToken(refreshToken); await createActivityLog({ userId: payload.sub, action: 'LOGOUT', entityType: 'USER', entityId: payload.sub, description: 'User logged out' }); } catch { /* logout remains idempotent */ } }
     response.clearCookie(refreshCookie, cookieOptions);
     response.status(204).send();
   } catch (error) {
