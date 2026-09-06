@@ -1,0 +1,23 @@
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useGlobalSearch } from '../features/search';
+import type { SearchResult, SearchType } from '../types/search';
+import { useAuthStore } from '../stores/auth.store';
+
+const groups: { type: SearchType; label: string }[] = [{ type: 'PROJECT', label: 'Projects' }, { type: 'TASK', label: 'Tasks' }, { type: 'ISSUE', label: 'Issues' }, { type: 'SPRINT', label: 'Sprints' }, { type: 'USER', label: 'People' }, { type: 'COMMENT', label: 'Comments' }];
+const target = (result: SearchResult): string => { if (result.type === 'PROJECT') return `/projects/${result._id}`; if (result.type === 'ISSUE') return `/projects/${result.projectId ?? ''}/issues`; if (result.type === 'TASK' || result.type === 'SPRINT') return `/projects/${result.projectId ?? ''}`; if (result.type === 'COMMENT') return result.entityType === 'ISSUE' ? `/projects/${result.projectId ?? ''}/issues` : `/projects/${result.projectId ?? result.entityId ?? ''}`; return '/organizations'; };
+const icon: Record<SearchType, string> = { PROJECT: 'P', TASK: 'T', ISSUE: 'I', SPRINT: 'S', USER: 'U', COMMENT: 'C' };
+
+export const GlobalSearch = (): ReactElement | null => {
+  const navigate = useNavigate();
+  const token = useAuthStore((state) => state.accessToken);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('');
+  const [type, setType] = useState<SearchType | undefined>();
+  const results = useGlobalSearch(value, type);
+  useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setOpen(true); } if (event.key === 'Escape') setOpen(false); }; window.addEventListener('keydown', onKeyDown); return () => window.removeEventListener('keydown', onKeyDown); }, []);
+  const grouped = useMemo(() => groups.map((group) => ({ ...group, items: (results.data?.items ?? []).filter((item) => item.type === group.type) })).filter((group) => group.items.length), [results.data?.items]);
+  if (!token) return null;
+  if (!open) return <button aria-label="Search" className="fixed left-5 top-5 z-40 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm" type="button" onClick={() => setOpen(true)}>Search <span className="ml-2 text-xs text-slate-400">Ctrl K</span></button>;
+  return <div className="fixed inset-0 z-50 bg-slate-950/40 p-4 sm:p-16" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}><section className="mx-auto max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="Global search"><div className="flex items-center gap-3 border-b border-slate-200 px-5"><span className="text-slate-400">⌕</span><input autoFocus className="h-14 flex-1 text-base text-slate-900 outline-none" placeholder="Search projects, tasks, issues..." value={value} onChange={(event) => setValue(event.target.value)} /><select aria-label="Filter search" className="border-0 bg-transparent text-xs text-slate-500 outline-none" value={type ?? ''} onChange={(event) => setType((event.target.value || undefined) as SearchType | undefined)}><option value="">All</option>{groups.map((group) => <option key={group.type} value={group.type}>{group.label}</option>)}</select><kbd className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-500">Esc</kbd></div><div className="max-h-[min(70vh,560px)] overflow-y-auto p-3">{value.trim().length < 2 ? <p className="p-8 text-center text-sm text-slate-500">Type at least two characters to search.</p> : results.isLoading ? <p className="p-8 text-center text-sm text-slate-500">Searching...</p> : grouped.length ? grouped.map((group) => <div className="mb-4" key={group.type}><h2 className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-400">{group.label}</h2>{group.items.map((result) => <button className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left hover:bg-cyan-50" key={`${result.type}:${result._id}`} type="button" onClick={() => { setOpen(false); setValue(''); navigate(target(result)); }}><span className="grid h-8 w-8 place-items-center rounded-lg bg-cyan-100 text-xs font-bold text-cyan-800">{icon[result.type]}</span><span className="min-w-0 flex-1"><strong className="block truncate text-sm text-slate-900">{result.title}</strong><small className="block truncate text-xs text-slate-500">{result.subtitle}</small></span></button>)}</div>) : <p className="p-8 text-center text-sm text-slate-500">No results found.</p>}</div></section></div>;
+};

@@ -18,6 +18,7 @@ import { ProjectIssuesPage } from './pages/ProjectIssuesPage';
 import { useAuthStore } from './stores/auth.store';
 import { NotificationBell } from './components/NotificationBell';
 import { NotificationPage } from './pages/NotificationPage';
+import { GlobalSearch } from './components/GlobalSearch';
 import './styles.css';
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ export const App = (): ReactElement => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <div className="fixed right-5 top-5 z-40"><NotificationBell /></div>
+        <GlobalSearch />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

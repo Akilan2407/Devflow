@@ -1,0 +1,5 @@
+import type { NextFunction, Request, Response } from 'express';
+import type { AuthenticatedRequest } from '../types/auth.types.js';
+import { searchService, type SearchType } from '../services/search.service.js';
+const userId = (request: Request): string => (request as unknown as AuthenticatedRequest).user._id.toString();
+export const search = async (request: Request, response: Response, next: NextFunction): Promise<void> => { try { const query = typeof request.query.q === 'string' ? request.query.q.trim() : ''; if (query.length < 2) { response.json({ data: { items: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } } }); return; } const allowed = ['PROJECT', 'TASK', 'ISSUE', 'SPRINT', 'USER', 'COMMENT']; const type = typeof request.query.type === 'string' && allowed.includes(request.query.type) ? request.query.type as SearchType : undefined; const page = Math.max(Number(request.query.page) || 1, 1); const limit = Math.min(Math.max(Number(request.query.limit) || 20, 1), 50); response.json({ data: await searchService.search({ query, userId: userId(request), page, limit, type }) }); } catch (error) { next(error); } };
