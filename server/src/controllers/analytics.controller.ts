@@ -1,0 +1,12 @@
+import type { NextFunction, Request, Response } from 'express';
+import { Types } from 'mongoose';
+import type { ProjectRequest } from '../middleware/project.middleware.js';
+import { analyticsService, type AnalyticsFilters } from '../services/analytics.service.js';
+
+const filters = (request: Request): AnalyticsFilters => { const date = (input: unknown): Date | undefined => { if (typeof input !== 'string' || !input) return undefined; const result = new Date(input); if (Number.isNaN(result.valueOf())) throw new Error('Invalid date filter'); return result; }; const sprintId = typeof request.query.sprintId === 'string' ? request.query.sprintId : undefined; const developerId = typeof request.query.developerId === 'string' ? request.query.developerId : undefined; if (sprintId && !Types.ObjectId.isValid(sprintId)) throw new Error('Invalid sprint filter'); if (developerId && !Types.ObjectId.isValid(developerId)) throw new Error('Invalid developer filter'); return { from: date(request.query.from), to: date(request.query.to), sprintId, developerId }; };
+const projectId = (request: Request): string => (request as unknown as ProjectRequest).project._id.toString();
+export const getProjectAnalytics = async (request: Request, response: Response, next: NextFunction): Promise<void> => { try { response.json({ data: await analyticsService.project(projectId(request), filters(request)) }); } catch (error) { next(error); } };
+export const getTaskAnalytics = async (request: Request, response: Response, next: NextFunction): Promise<void> => { try { response.json({ data: await analyticsService.tasks(projectId(request), filters(request)) }); } catch (error) { next(error); } };
+export const getIssueAnalytics = async (request: Request, response: Response, next: NextFunction): Promise<void> => { try { response.json({ data: await analyticsService.issues(projectId(request), filters(request)) }); } catch (error) { next(error); } };
+export const getSprintAnalytics = async (request: Request, response: Response, next: NextFunction): Promise<void> => { try { response.json({ data: await analyticsService.sprints(projectId(request), filters(request)) }); } catch (error) { next(error); } };
+export const getTeamAnalytics = async (request: Request, response: Response, next: NextFunction): Promise<void> => { try { response.json({ data: await analyticsService.team(projectId(request), filters(request)) }); } catch (error) { next(error); } };

@@ -1,0 +1,6 @@
+export type AnalyticsFilters = { from?: string; to?: string; sprintId?: string; developerId?: string };
+export type ProjectAnalytics = { totalTasks: number; completedTasks: number; openTasks: number; taskCompletionPercentage: number; projectCompletion: number; openIssues: number; resolvedIssues: number; storyPointsCompleted: number; storyPointsRemaining: number; taskStatuses: { _id: string; count: number }[]; issueDistribution: { _id: string; count: number }[]; sprintVelocity: SprintAnalytics[]; activityTrends: { _id: string; count: number }[] };
+export type TaskAnalytics = { totals: { total: number; completed: number; pointsCompleted: number; pointsTotal: number }[]; statuses: { _id: string; count: number }[]; trends: { _id: string; count: number; completed: number }[] };
+export type IssueAnalytics = { totals: { open: number; resolved: number }[]; distribution: { _id: string; count: number }[]; types: { _id: string; count: number }[] };
+export type SprintAnalytics = { _id: string; name: string; status: string; startDate: string; endDate: string; velocity: number; storyPointsCompleted: number; storyPointsTotal: number };
+export type TeamAnalytics = { _id: string; name?: string; email?: string; tasks: number; completed: number; storyPoints: number; completedPoints: number }[];

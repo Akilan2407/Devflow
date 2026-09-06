@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.middleware.js';
+import { requirePermission } from '../middleware/organization.middleware.js';
+import { requireProjectParamAccess } from '../middleware/project.middleware.js';
+import { getIssueAnalytics, getProjectAnalytics, getSprintAnalytics, getTaskAnalytics, getTeamAnalytics } from '../controllers/analytics.controller.js';
+export const analyticsRouter = Router();
+analyticsRouter.use(requireAuth);
+const access = [requireProjectParamAccess('projectId'), requirePermission('project:read')];
+analyticsRouter.get('/projects/:projectId', ...access, getProjectAnalytics);
+analyticsRouter.get('/projects/:projectId/tasks', ...access, getTaskAnalytics);
+analyticsRouter.get('/projects/:projectId/issues', ...access, getIssueAnalytics);
+analyticsRouter.get('/projects/:projectId/sprints', ...access, getSprintAnalytics);
+analyticsRouter.get('/projects/:projectId/team', ...access, getTeamAnalytics);

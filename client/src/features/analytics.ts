@@ -1,0 +1,11 @@
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../lib/api';
+import type { AnalyticsFilters, IssueAnalytics, ProjectAnalytics, SprintAnalytics, TaskAnalytics, TeamAnalytics } from '../types/analytics';
+
+export const analyticsKeys = { project: (id: string, filters: AnalyticsFilters) => ['analytics', 'project', id, filters] as const, tasks: (id: string, filters: AnalyticsFilters) => ['analytics', 'tasks', id, filters] as const, issues: (id: string, filters: AnalyticsFilters) => ['analytics', 'issues', id, filters] as const, sprints: (id: string, filters: AnalyticsFilters) => ['analytics', 'sprints', id, filters] as const, team: (id: string, filters: AnalyticsFilters) => ['analytics', 'team', id, filters] as const };
+const params = (filters: AnalyticsFilters) => ({ params: filters });
+export const useProjectAnalytics = (projectId: string, filters: AnalyticsFilters) => useQuery({ queryKey: analyticsKeys.project(projectId, filters), queryFn: async () => (await apiClient.get<{ data: ProjectAnalytics }>(`/analytics/projects/${projectId}`, params(filters))).data.data });
+export const useTaskAnalytics = (projectId: string, filters: AnalyticsFilters) => useQuery({ queryKey: analyticsKeys.tasks(projectId, filters), queryFn: async () => (await apiClient.get<{ data: TaskAnalytics }>(`/analytics/projects/${projectId}/tasks`, params(filters))).data.data });
+export const useIssueAnalytics = (projectId: string, filters: AnalyticsFilters) => useQuery({ queryKey: analyticsKeys.issues(projectId, filters), queryFn: async () => (await apiClient.get<{ data: IssueAnalytics }>(`/analytics/projects/${projectId}/issues`, params(filters))).data.data });
+export const useSprintAnalytics = (projectId: string, filters: AnalyticsFilters) => useQuery({ queryKey: analyticsKeys.sprints(projectId, filters), queryFn: async () => (await apiClient.get<{ data: { items: SprintAnalytics[] } }>(`/analytics/projects/${projectId}/sprints`, params(filters))).data.data });
+export const useTeamAnalytics = (projectId: string, filters: AnalyticsFilters) => useQuery({ queryKey: analyticsKeys.team(projectId, filters), queryFn: async () => (await apiClient.get<{ data: TeamAnalytics }>(`/analytics/projects/${projectId}/team`, params(filters))).data.data });

@@ -20,6 +20,7 @@ import { messageRouter } from './routes/message.routes.js';
 import { createSocketServer } from './sockets/socket.server.js';
 import { notificationRouter } from './routes/notification.routes.js';
 import { activityLogRouter } from './routes/activity-log.routes.js';
+import { analyticsRouter } from './routes/analytics.routes.js';
 
 export const createApp = (): express.Express => {
   const app = express();
@@ -39,6 +40,7 @@ export const createApp = (): express.Express => {
   app.use('/api', messageRouter);
   app.use('/api/notifications', notificationRouter);
   app.use('/api/organizations', activityLogRouter);
+  app.use('/api/analytics', analyticsRouter);
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
   return app;
