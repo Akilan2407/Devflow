@@ -3,6 +3,7 @@ import { projectService } from '../services/project.service.js';
 import type { OrganizationRequest } from '../types/organization.types.js';
 import type { ProjectRequest } from '../middleware/project.middleware.js';
 import { createProjectSchema, projectMemberSchema, updateProjectSchema } from '../validators/project.validators.js';
+import { emitSocketEvent, organizationRoom, projectRoom, SocketEvent } from '../sockets/socket.events.js';
 
 const projectParam = (value: string | string[] | undefined): string => {
   if (typeof value !== 'string') throw new Error('Invalid route parameter');
@@ -37,11 +38,11 @@ export const getProject = (request: Request, response: Response): void => {
 };
 
 export const updateProject = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { response.json({ data: await projectService.update((request as unknown as ProjectRequest).project, updateProjectSchema.parse(request.body)) }); } catch (error) { next(error); }
+  try { const value = request as unknown as ProjectRequest; const project = await projectService.update(value.project, updateProjectSchema.parse(request.body)); emitSocketEvent(SocketEvent.PROJECT_UPDATED, [organizationRoom(value.project.organizationId.toString()), projectRoom(value.project._id.toString())], project); response.json({ data: project }); } catch (error) { next(error); }
 };
 
 export const archiveProject = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { response.json({ data: await projectService.archive((request as unknown as ProjectRequest).project) }); } catch (error) { next(error); }
+  try { const value = request as unknown as ProjectRequest; const project = await projectService.archive(value.project); emitSocketEvent(SocketEvent.PROJECT_UPDATED, [organizationRoom(value.project.organizationId.toString()), projectRoom(value.project._id.toString())], project); response.json({ data: project }); } catch (error) { next(error); }
 };
 
 export const deleteProject = async (request: Request, response: Response, next: NextFunction): Promise<void> => {

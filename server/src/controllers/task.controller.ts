@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
 import { taskService } from '../services/task.service.js';
-import type { OrganizationRequest } from '../types/organization.types.js';
 import type { TaskRequest } from '../middleware/task.middleware.js';
 import { assignTaskSchema, createTaskSchema, dueDateSchema, labelSchema, labelsSchema, positionSchema, prioritySchema, statusSchema, storyPointsSchema, updateTaskSchema } from '../validators/task.validators.js';
+import { emitSocketEvent, organizationRoom, projectRoom, taskRoom, SocketEvent } from '../sockets/socket.events.js';
 
 const param = (value: string | string[] | undefined): string => {
   if (typeof value !== 'string') throw new Error('Invalid route parameter');
@@ -14,7 +14,9 @@ const taskContext = (request: Request) => request as unknown as TaskRequest;
 export const createTask = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
   try {
     const context = taskContext(request);
-    response.status(201).json({ data: await taskService.create(context.organization._id.toString(), context.project._id.toString(), context.user._id.toString(), createTaskSchema.parse(request.body)) });
+    const task = await taskService.create(context.organization._id.toString(), context.project._id.toString(), context.user._id.toString(), createTaskSchema.parse(request.body));
+    emitSocketEvent(SocketEvent.TASK_CREATED, [organizationRoom(context.organization._id.toString()), projectRoom(context.project._id.toString())], task);
+    response.status(201).json({ data: task });
   } catch (error) { next(error); }
 };
 
@@ -29,15 +31,15 @@ export const listTasks = async (request: Request, response: Response, next: Next
 export const getTask = (request: Request, response: Response): void => { response.json({ data: taskContext(request).task }); };
 
 export const updateTask = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { const context = taskContext(request); response.json({ data: await taskService.update(context.task, context.organization._id.toString(), updateTaskSchema.parse(request.body)) }); } catch (error) { next(error); }
+  try { const context = taskContext(request); const input = updateTaskSchema.parse(request.body); const task = await taskService.update(context.task, context.organization._id.toString(), input); const rooms = [organizationRoom(context.organization._id.toString()), projectRoom(context.project._id.toString()), taskRoom(task._id.toString())]; emitSocketEvent(SocketEvent.TASK_UPDATED, rooms, task); if ('status' in input || 'position' in input) emitSocketEvent(SocketEvent.TASK_MOVED, rooms, task); response.json({ data: task }); } catch (error) { next(error); }
 };
 
 export const deleteTask = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { await taskService.delete(taskContext(request).task); response.status(204).send(); } catch (error) { next(error); }
+  try { const context = taskContext(request); const task = context.task; await taskService.delete(task); emitSocketEvent(SocketEvent.TASK_DELETED, [organizationRoom(context.organization._id.toString()), projectRoom(context.project._id.toString()), taskRoom(task._id.toString())], { _id: task._id, projectId: task.projectId }); response.status(204).send(); } catch (error) { next(error); }
 };
 
 const patch = (schema: { parse: (value: unknown) => Record<string, unknown> }) => async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-  try { response.json({ data: await taskService.patch(taskContext(request).task, schema.parse(request.body)) }); } catch (error) { next(error); }
+  try { const context = taskContext(request); const values = schema.parse(request.body); const task = await taskService.patch(context.task, values); const rooms = [organizationRoom(context.organization._id.toString()), projectRoom(context.project._id.toString()), taskRoom(task._id.toString())]; emitSocketEvent(SocketEvent.TASK_UPDATED, rooms, task); if ('status' in values || 'position' in values) emitSocketEvent(SocketEvent.TASK_MOVED, rooms, task); response.json({ data: task }); } catch (error) { next(error); }
 };
 
 export const assignTask = async (request: Request, response: Response, next: NextFunction): Promise<void> => {

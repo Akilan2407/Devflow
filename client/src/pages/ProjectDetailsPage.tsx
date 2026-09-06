@@ -1,12 +1,9 @@
 import type { ReactElement } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ProjectHeader } from '../components/ProjectHeader';
-import { ProjectMemberList } from '../components/ProjectMemberList';
 import { useArchiveProject, useProject } from '../features/projects';
 import { TaskDetails } from '../components/TaskDetails';
-import { TaskFilters } from '../components/TaskFilters';
 import { TaskForm } from '../components/TaskForm';
-import { TaskList } from '../components/TaskList';
 import { useTasks, type TaskFilters as TaskFilterValues } from '../features/tasks';
 import type { Task } from '../types/task';
 import { useState } from 'react';
@@ -16,6 +13,7 @@ import { SprintPlanning } from '../components/SprintPlanning';
 import { SprintDetails } from '../components/SprintDetails';
 import type { Sprint } from '../types/sprint';
 import { CommentSection } from '../components/CommentSection';
+import { useProjectRealtime } from '../hooks/useProjectRealtime';
 
 export const ProjectDetailsPage = (): ReactElement => {
   const { projectId } = useParams();
@@ -26,6 +24,7 @@ export const ProjectDetailsPage = (): ReactElement => {
   const [selectedTask, setSelectedTask] = useState<Task | undefined>();
   const [selectedSprint, setSelectedSprint] = useState<Sprint | undefined>();
   const tasks = useTasks(projectId, filters);
+  useProjectRealtime(projectId);
   if (project.isLoading) return <main className="min-h-screen bg-slate-100 p-6">Loading project...</main>;
   if (!project.data) return <main className="min-h-screen bg-slate-100 p-6">Project not found.</main>;
   return <main className="min-h-screen bg-slate-100 p-6 text-slate-900"><div className="mx-auto max-w-7xl space-y-6"><ProjectHeader project={project.data} onArchive={() => void archive.mutateAsync().then(() => void project.refetch())} /><CommentSection entityType="PROJECT" entityId={project.data._id} /><SprintPlanning projectId={project.data._id} onSelect={setSelectedSprint} />{selectedSprint && <SprintDetails sprint={selectedSprint} projectId={project.data._id} availableTasks={tasks.data?.items ?? []} onChanged={() => { setSelectedSprint(undefined); void tasks.refetch(); }} />}<TaskForm projectId={project.data._id} onSaved={() => void tasks.refetch()} /><KanbanFilters filters={filters} onChange={setFilters} />{tasks.isLoading ? <p>Loading tasks...</p> : <KanbanBoard projectId={project.data._id} filters={filters} tasks={tasks.data?.items ?? []} onSelect={setSelectedTask} />}{selectedTask && <TaskDetails task={selectedTask} onChanged={setSelectedTask} onDeleted={() => { setSelectedTask(undefined); void tasks.refetch(); }} />}<button className="text-sm font-semibold text-cyan-700" onClick={() => navigate('/projects')}>Back to projects</button></div></main>;
