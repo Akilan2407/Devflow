@@ -6,6 +6,7 @@ import { taskKeys } from '../features/tasks';
 import { issueKeys } from '../features/issues';
 import { commentKeys, type CommentEntityType } from '../features/comments';
 import { projectKeys } from '../features/projects';
+import { messageKeys } from '../features/messages';
 
 type Resource = { projectId?: string; entityType?: CommentEntityType; entityId?: string };
 
@@ -30,6 +31,10 @@ export const useProjectRealtime = (projectId: string | undefined): void => {
       ['ISSUE_CREATED', refreshIssues], ['ISSUE_UPDATED', refreshIssues], ['ISSUE_DELETED', refreshIssues],
       ['COMMENT_CREATED', refreshComments], ['COMMENT_UPDATED', refreshComments], ['COMMENT_DELETED', refreshComments],
       ['PROJECT_UPDATED', () => void client.invalidateQueries({ queryKey: projectKeys.all })],
+      ['MESSAGE_SENT', () => void client.invalidateQueries({ queryKey: messageKeys.list(projectId) })],
+      ['MESSAGE_UPDATED', () => void client.invalidateQueries({ queryKey: messageKeys.list(projectId) })],
+      ['MESSAGE_DELETED', () => void client.invalidateQueries({ queryKey: messageKeys.list(projectId) })],
+      ['MESSAGE_READ', () => void client.invalidateQueries({ queryKey: messageKeys.list(projectId) })],
     ];
     handlers.forEach(([event, handler]) => socket.on(event, handler));
     return () => {
