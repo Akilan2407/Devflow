@@ -20,6 +20,7 @@
     "ioredis": "^5.7.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
+    "multer": "^2.3.0",
     "socket.io": "^4.8.1",
     "zod": "^4.1.5"
   },
@@ -29,8 +30,9 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
-    "mongodb-memory-server": "^10.2.0",
+    "@types/multer": "^2.2.0",
     "@types/supertest": "^6.0.3",
+    "mongodb-memory-server": "^10.2.0",
     "supertest": "^7.1.4",
     "tsx": "^4.20.5",
     "vitest": "^3.2.4"

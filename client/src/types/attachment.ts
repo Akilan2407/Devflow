@@ -1,0 +1,2 @@
+export type AttachmentEntityType = 'PROJECT' | 'TASK' | 'ISSUE' | 'CHAT';
+export type Attachment = { _id: string; organizationId: string; uploadedBy: { _id: string; name: string; email?: string; avatar?: string | null } | string; entityType: AttachmentEntityType; entityId: string; fileName: string; fileSize: number; mimeType: string; fileExtension: string; createdAt: string };
