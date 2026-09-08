@@ -3,6 +3,7 @@ import { OrganizationMemberModel } from '../models/organization-member.model.js'
 import { OrganizationModel } from '../models/organization.model.js';
 import { ProjectModel, type ProjectDocument } from '../models/project.model.js';
 import type { OrganizationRequest } from '../types/organization.types.js';
+import { CACHE_TTL, getCache, setCache } from '../utils/cache.js';
 
 export type ProjectRequest = OrganizationRequest & { project: ProjectDocument };
 
@@ -34,11 +35,15 @@ export const requireProjectAccess: RequestHandler = (request, response, next) =>
 
 export const requireProjectParamAccess = (projectParam: string): RequestHandler => (request, response, next) => {
   void (async () => {
-    const project = await ProjectModel.findById(request.params[projectParam]);
+    const projectId = request.params[projectParam];
+    const cacheKey = `devflow:projects:detail:${projectId}`;
+    const cached = request.method === 'GET' ? await getCache<ProjectDocument>(cacheKey) : null;
+    const project = cached ?? await ProjectModel.findById(projectId);
     if (!project || !(await setOrganization(request, project.organizationId.toString())) ) {
       response.status(404).json({ error: { message: 'Project not found' } });
       return;
     }
+    if (!cached && request.method === 'GET') await setCache(cacheKey, project, CACHE_TTL.detail);
     (request as unknown as ProjectRequest).project = project;
     next();
   })().catch(next);

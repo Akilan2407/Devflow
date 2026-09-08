@@ -1,6 +1,7 @@
 import { TaskModel } from '../models/task.model.js';
 import { SprintModel, type SprintDocument } from '../models/sprint.model.js';
 import { AppError } from '../utils/app-error.js';
+import { CACHE_TTL, deleteCachePattern, getCache, setCache } from '../utils/cache.js';
 import type { CreateSprintInput, UpdateSprintInput } from '../validators/sprint.validators.js';
 
 const assertDates = (startDate: Date, endDate: Date): void => {
@@ -10,14 +11,25 @@ const assertDates = (startDate: Date, endDate: Date): void => {
 export const sprintService = {
   async create(organizationId: string, projectId: string, userId: string, input: CreateSprintInput): Promise<SprintDocument> {
     assertDates(input.startDate, input.endDate);
-    return SprintModel.create({ ...input, organizationId, projectId, createdBy: userId });
+    const sprint = await SprintModel.create({ ...input, organizationId, projectId, createdBy: userId });
+    await deleteCachePattern(`devflow:sprints:${projectId}:*`);
+    await deleteCachePattern(`devflow:analytics:${projectId}:*`);
+    return sprint;
   },
 
   async list(projectId: string): Promise<SprintDocument[]> {
-    return SprintModel.find({ projectId }).sort({ startDate: -1 });
+    const key = `devflow:sprints:${projectId}:list`;
+    const cached = await getCache<SprintDocument[]>(key);
+    if (cached) return cached;
+    const sprints = await SprintModel.find({ projectId }).sort({ startDate: -1 });
+    await setCache(key, sprints, CACHE_TTL.list);
+    return sprints;
   },
 
   async get(sprint: SprintDocument) {
+    const key = `devflow:sprints:${sprint.projectId}:detail:${sprint._id}`;
+    const cached = await getCache<unknown>(key);
+    if (cached) return cached;
     const [tasks, totalStoryPoints, completedStoryPoints] = await Promise.all([
       TaskModel.find({ sprintId: sprint._id }).sort({ position: 1, createdAt: 1 }),
       TaskModel.aggregate([{ $match: { sprintId: sprint._id } }, { $group: { _id: null, total: { $sum: { $ifNull: ['$storyPoints', 0] } } } }]),
@@ -25,7 +37,9 @@ export const sprintService = {
     ]);
     const total = totalStoryPoints[0]?.total ?? 0;
     const completed = completedStoryPoints[0]?.total ?? 0;
-    return { sprint, tasks, metrics: { totalStoryPoints: total, completedStoryPoints: completed, remainingStoryPoints: Math.max(total - completed, 0), completionPercentage: total ? Math.round((completed / total) * 100) : 0 } };
+    const result = { sprint, tasks, metrics: { totalStoryPoints: total, completedStoryPoints: completed, remainingStoryPoints: Math.max(total - completed, 0), completionPercentage: total ? Math.round((completed / total) * 100) : 0 } };
+    await setCache(key, result, CACHE_TTL.detail);
+    return result;
   },
 
   async update(sprint: SprintDocument, input: UpdateSprintInput): Promise<SprintDocument> {
@@ -33,7 +47,10 @@ export const sprintService = {
     const endDate = input.endDate ?? sprint.endDate;
     assertDates(startDate, endDate);
     Object.assign(sprint, input);
-    return sprint.save();
+    const updated = await sprint.save();
+    await deleteCachePattern(`devflow:sprints:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:analytics:${sprint.projectId}:*`);
+    return updated;
   },
 
   async start(sprint: SprintDocument): Promise<SprintDocument> {
@@ -41,18 +58,27 @@ export const sprintService = {
     const activeSprint = await SprintModel.exists({ projectId: sprint.projectId, status: 'ACTIVE', _id: { $ne: sprint._id } });
     if (activeSprint) throw new AppError(409, 'This project already has an active sprint');
     sprint.status = 'ACTIVE';
-    return sprint.save();
+    const updated = await sprint.save();
+    await deleteCachePattern(`devflow:sprints:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:analytics:${sprint.projectId}:*`);
+    return updated;
   },
 
   async complete(sprint: SprintDocument): Promise<SprintDocument> {
     if (sprint.status !== 'ACTIVE') throw new AppError(400, 'Only an active sprint can be completed');
     sprint.status = 'COMPLETED';
-    return sprint.save();
+    const updated = await sprint.save();
+    await deleteCachePattern(`devflow:sprints:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:analytics:${sprint.projectId}:*`);
+    return updated;
   },
 
   async delete(sprint: SprintDocument): Promise<void> {
     await TaskModel.updateMany({ sprintId: sprint._id }, { $set: { sprintId: null } });
     await SprintModel.deleteOne({ _id: sprint._id, projectId: sprint.projectId, organizationId: sprint.organizationId });
+    await deleteCachePattern(`devflow:sprints:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:tasks:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:analytics:${sprint.projectId}:*`);
   },
 
   async addTask(sprint: SprintDocument, taskId: string): Promise<void> {
@@ -60,10 +86,16 @@ export const sprintService = {
     if (!task) throw new AppError(404, 'Task not found in this project');
     task.sprintId = sprint._id;
     await task.save();
+    await deleteCachePattern(`devflow:sprints:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:tasks:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:analytics:${sprint.projectId}:*`);
   },
 
   async removeTask(sprint: SprintDocument, taskId: string): Promise<void> {
     const result = await TaskModel.updateOne({ _id: taskId, projectId: sprint.projectId, organizationId: sprint.organizationId, sprintId: sprint._id }, { $set: { sprintId: null } });
     if (!result.modifiedCount) throw new AppError(404, 'Task is not in this sprint');
+    await deleteCachePattern(`devflow:sprints:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:tasks:${sprint.projectId}:*`);
+    await deleteCachePattern(`devflow:analytics:${sprint.projectId}:*`);
   },
 };

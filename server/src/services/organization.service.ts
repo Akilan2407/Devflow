@@ -3,6 +3,7 @@ import { OrganizationMemberModel } from '../models/organization-member.model.js'
 import { OrganizationModel, type OrganizationDocument } from '../models/organization.model.js';
 import type { OrganizationRole } from '../utils/permissions.js';
 import { AppError } from '../utils/app-error.js';
+import { CACHE_TTL, deleteCache, getCache, setCache } from '../utils/cache.js';
 import type {
   CreateOrganizationInput,
   MemberInviteInput,
@@ -24,10 +25,15 @@ export const organizationService = {
   },
 
   async listForUser(userId: string): Promise<OrganizationDocument[]> {
+    const key = `devflow:organizations:user:${userId}`;
+    const cached = await getCache<OrganizationDocument[]>(key);
+    if (cached) return cached;
     const memberships = await OrganizationMemberModel.find({ userId }).select('organizationId');
-    return OrganizationModel.find({
+    const organizations = await OrganizationModel.find({
       _id: { $in: memberships.map((membership) => membership.organizationId) },
     });
+    await setCache(key, organizations, CACHE_TTL.organization);
+    return organizations;
   },
 
   async update(
@@ -35,7 +41,9 @@ export const organizationService = {
     input: UpdateOrganizationInput,
   ): Promise<OrganizationDocument> {
     Object.assign(organization, input);
-    return organization.save();
+    const updated = await organization.save();
+    await deleteCache(`devflow:organizations:${organization._id}:members`);
+    return updated;
   },
 
   async delete(organization: OrganizationDocument): Promise<void> {
@@ -43,6 +51,7 @@ export const organizationService = {
       OrganizationMemberModel.deleteMany({ organizationId: organization._id }),
       OrganizationModel.deleteOne({ _id: organization._id }),
     ]);
+    await deleteCache(`devflow:organizations:${organization._id}:members`);
   },
 
   async invite(organizationId: string, input: MemberInviteInput): Promise<void> {
@@ -52,6 +61,8 @@ export const organizationService = {
       throw new AppError(409, 'User is already a member');
     }
     await OrganizationMemberModel.create({ organizationId, userId: user._id, role: input.role });
+    await deleteCache(`devflow:organizations:user:${user._id}`);
+    await deleteCache(`devflow:organizations:${organizationId}:members`);
   },
 
   async remove(organization: OrganizationDocument, userId: string): Promise<void> {
@@ -63,6 +74,8 @@ export const organizationService = {
       userId,
     });
     if (!result.deletedCount) throw new AppError(404, 'Member not found');
+    await deleteCache(`devflow:organizations:user:${userId}`);
+    await deleteCache(`devflow:organizations:${organization._id}:members`);
   },
 
   async changeRole(
@@ -78,11 +91,17 @@ export const organizationService = {
       { $set: { role } },
     );
     if (!result.matchedCount) throw new AppError(404, 'Member not found');
+    await deleteCache(`devflow:organizations:${organization._id}:members`);
   },
 
   async members(organizationId: string) {
-    return OrganizationMemberModel.find({ organizationId })
+    const key = `devflow:organizations:${organizationId}:members`;
+    const cached = await getCache<unknown[]>(key);
+    if (cached) return cached;
+    const members = await OrganizationMemberModel.find({ organizationId })
       .populate('userId', 'name email avatar isActive')
       .select('-_id organizationId userId role joinedAt');
+    await setCache(key, members, CACHE_TTL.organization);
+    return members;
   },
 };

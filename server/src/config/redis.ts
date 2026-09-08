@@ -6,6 +6,10 @@ export const redis = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: 1,
 });
 
+redis.on('error', (error) => {
+  console.warn('Redis unavailable; cache operations will fall back to MongoDB', error.message);
+});
+
 export const connectRedis = async (): Promise<void> => {
   if (redis.status === 'wait') {
     await redis.connect();
