@@ -29,6 +29,7 @@ Do not commit either `.env` file. Credentials and secrets belong in environment 
 | `PORT`        | API port                  | `4000`                              |
 | `CLIENT_URL`  | Allowed frontend origin   | `http://localhost:5173`             |
 | `MONGODB_URI` | MongoDB connection string | `mongodb://127.0.0.1:27017/devflow` |
+| `GITHUB_TOKEN` | Server-only GitHub API token | `github-pat-kept-out-of-the-client` |
 | `REDIS_URL`   | Redis connection string   | `redis://127.0.0.1:6379`            |
 
 ### Client (`client/.env`)

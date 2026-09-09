@@ -1,0 +1,4 @@
+import type { ReactElement } from 'react';
+import type { GithubCommit } from '../types/github';
+
+export const CommitList = ({ commits }: { commits: GithubCommit[] }): ReactElement => <section><h3 className="mb-3 text-lg font-bold">Recent commits</h3><div className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">{commits.length ? commits.map((commit) => <a className="block p-4 hover:bg-slate-50" href={commit.html_url} target="_blank" rel="noreferrer" key={commit.sha}><p className="font-semibold text-slate-900">{commit.commit.message.split('\n')[0]}</p><p className="mt-1 text-sm text-slate-500">{commit.author?.login ?? commit.commit.author?.name ?? 'Unknown author'} · {new Date(commit.commit.author?.date ?? Date.now()).toLocaleDateString()}</p></a>) : <p className="p-4 text-sm text-slate-500">No recent commits.</p>}</div></section>;

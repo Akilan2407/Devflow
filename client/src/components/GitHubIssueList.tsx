@@ -1,0 +1,4 @@
+import type { ReactElement } from 'react';
+import type { GithubIssue } from '../types/github';
+
+export const GitHubIssueList = ({ issues }: { issues: GithubIssue[] }): ReactElement => <section><h3 className="mb-3 text-lg font-bold">GitHub issues</h3><div className="grid gap-3 md:grid-cols-2">{issues.length ? issues.map((issue) => <a className="rounded-xl border border-slate-200 bg-white p-4 hover:border-cyan-500" href={issue.html_url} target="_blank" rel="noreferrer" key={issue.id}><div className="flex justify-between gap-3"><span className="text-sm text-slate-500">#{issue.number}</span><span className="text-xs font-semibold uppercase text-cyan-700">{issue.state}</span></div><p className="mt-2 font-semibold">{issue.title}</p><p className="mt-2 text-sm text-slate-500">{issue.user?.login ?? 'Unknown author'}</p></a>) : <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">No GitHub issues.</p>}</div></section>;

@@ -48,3 +48,14 @@ export const requireProjectParamAccess = (projectParam: string): RequestHandler 
     next();
   })().catch(next);
 };
+
+export const requireProjectMember: RequestHandler = (request, response, next) => {
+  const value = request as unknown as ProjectRequest;
+  const userId = value.user._id.toString();
+  const isMember = value.project.ownerId.toString() === userId || value.project.members.some((member) => member.toString() === userId);
+  if (!isMember) {
+    response.status(404).json({ error: { message: 'Project not found' } });
+    return;
+  }
+  next();
+};

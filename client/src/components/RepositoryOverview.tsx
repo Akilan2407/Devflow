@@ -1,0 +1,4 @@
+import type { ReactElement } from 'react';
+import type { Repository } from '../types/github';
+
+export const RepositoryOverview = ({ repository }: { repository: Repository }): ReactElement => <section className="rounded-xl bg-slate-900 p-5 text-white shadow-sm"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">Connected repository</p><h2 className="mt-1 text-2xl font-bold">{repository.owner}/{repository.name}</h2><p className="mt-1 text-sm text-slate-300">GitHub repository ID {repository.githubRepositoryId}</p></div><a className="rounded-lg border border-slate-600 px-3 py-2 text-sm font-semibold hover:border-cyan-300" href={repository.url} target="_blank" rel="noreferrer">Open on GitHub</a></div></section>;
