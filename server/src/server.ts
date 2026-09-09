@@ -24,6 +24,7 @@ import { analyticsRouter } from './routes/analytics.routes.js';
 import { searchRouter } from './routes/search.routes.js';
 import { attachmentRouter } from './routes/attachment.routes.js';
 import { repositoryRouter } from './routes/repository.routes.js';
+import { ciRouter } from './routes/ci.routes.js';
 
 export const createApp = (): express.Express => {
   const app = express();
@@ -47,6 +48,7 @@ export const createApp = (): express.Express => {
   app.use('/api/search', searchRouter);
   app.use('/api/attachments', attachmentRouter);
   app.use('/api', repositoryRouter);
+  app.use('/api', ciRouter);
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
   return app;
