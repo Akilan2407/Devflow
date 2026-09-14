@@ -4,8 +4,8 @@ import { AppError } from '../utils/app-error.js';
 import type { ConnectRepositoryInput } from '../validators/repository.validators.js';
 import { githubService } from './github.service.js';
 
-const repositoryForProject = async (projectId: string): Promise<RepositoryDocument> => {
-  const repository = await RepositoryModel.findOne({ projectId });
+const repositoryForProject = async (projectId: string, organizationId: string): Promise<RepositoryDocument> => {
+  const repository = await RepositoryModel.findOne({ projectId, organizationId });
   if (!repository) throw new AppError(404, 'No GitHub repository is connected');
   return repository;
 };
@@ -34,15 +34,15 @@ export const repositoryService = {
     });
   },
 
-  async disconnect(projectId: string): Promise<void> {
-    const result = await RepositoryModel.deleteOne({ projectId });
+  async disconnect(projectId: string, organizationId: string): Promise<void> {
+    const result = await RepositoryModel.deleteOne({ projectId, organizationId });
     if (!result.deletedCount) throw new AppError(404, 'No GitHub repository is connected');
   },
 
-  get: (projectId: string) => repositoryForProject(projectId),
+  get: (projectId: string, organizationId: string) => repositoryForProject(projectId, organizationId),
 
-  async githubData<T>(projectId: string, request: (owner: string, name: string) => Promise<T>): Promise<T> {
-    const repository = await repositoryForProject(projectId);
+  async githubData<T>(projectId: string, organizationId: string, request: (owner: string, name: string) => Promise<T>): Promise<T> {
+    const repository = await repositoryForProject(projectId, organizationId);
     return request(repository.owner, repository.name);
   },
 
