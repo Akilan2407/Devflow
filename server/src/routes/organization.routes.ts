@@ -23,43 +23,43 @@ organizationRouter.post('/', createOrganization);
 organizationRouter.get('/', listOrganizations);
 organizationRouter.get(
   '/:id',
-  requireOrganizationAccess,
+  requireOrganizationAccess(),
   requirePermission('organization:read'),
   getOrganization,
 );
 organizationRouter.patch(
   '/:id',
-  requireOrganizationAccess,
+  requireOrganizationAccess(),
   requirePermission('organization:update'),
   updateOrganization,
 );
 organizationRouter.delete(
   '/:id',
-  requireOrganizationAccess,
+  requireOrganizationAccess(),
   requireRole('SUPER_ADMIN', 'ORGANIZATION_ADMIN'),
   deleteOrganization,
 );
 organizationRouter.post(
   '/:id/members',
-  requireOrganizationAccess,
+  requireOrganizationAccess(),
   requirePermission('member:invite'),
   inviteMember,
 );
 organizationRouter.get(
   '/:id/members',
-  requireOrganizationAccess,
+  requireOrganizationAccess(),
   requirePermission('organization:read'),
   getMembers,
 );
 organizationRouter.delete(
   '/:id/members/:userId',
-  requireOrganizationAccess,
+  requireOrganizationAccess(),
   requirePermission('member:remove'),
   removeMember,
 );
 organizationRouter.patch(
   '/:id/members/:userId/role',
-  requireOrganizationAccess,
+  requireOrganizationAccess(),
   requirePermission('member:updateRole'),
   changeMemberRole,
 );

@@ -16,7 +16,7 @@ export const TeamCreationForm = ({ organizationId, onCreated }: Props): ReactEle
     event.preventDefault();
     const result = schema.safeParse(values);
     if (!result.success) {
-      setError('A team name is required.');
+      setError('A team name is required (min 2 chars).');
       return;
     }
     try {
@@ -32,24 +32,30 @@ export const TeamCreationForm = ({ organizationId, onCreated }: Props): ReactEle
     }
   };
   return (
-    <form className="rounded-xl bg-white p-5 shadow-sm" onSubmit={(event) => void submit(event)}>
-      <h2 className="font-bold text-slate-900">Create team</h2>
+    <form className="glass-panel p-6" onSubmit={(event) => void submit(event)}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="badge-cyan text-[10px]">SQUAD INITIALIZER</span>
+      </div>
+      <h2 className="font-bold text-white text-lg">Create Engineering Squad</h2>
+      <p className="text-xs text-slate-400 mt-0.5">Form specialized cross-functional squads for targeted development.</p>
+
       <div className="mt-4 flex flex-wrap gap-3">
         <input
           className="input max-w-xs"
-          placeholder="Team name"
+          placeholder="Squad name (e.g. Frontend Core)"
           value={values.name}
           onChange={(event) => setValues({ ...values, name: event.target.value })}
         />
         <input
           className="input max-w-md"
-          placeholder="Description"
+          placeholder="Mission description"
           value={values.description}
           onChange={(event) => setValues({ ...values, description: event.target.value })}
         />
-        <button className="button max-w-fit">Create team</button>
+        <button className="button text-xs">Create Squad</button>
       </div>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
     </form>
   );
 };
+

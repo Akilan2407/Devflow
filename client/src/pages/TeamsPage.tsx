@@ -11,6 +11,7 @@ export const TeamsPage = (): ReactElement => {
   const { organizationId } = useParams();
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedId, setSelectedId] = useState('');
+
   useEffect(() => {
     if (!organizationId) return;
     void apiClient
@@ -20,35 +21,57 @@ export const TeamsPage = (): ReactElement => {
         setSelectedId(response.data.data.items[0]?._id ?? '');
       });
   }, [organizationId]);
+
   const selected = teams.find((team) => team._id === selectedId);
+
   return (
-    <main className="min-h-screen bg-slate-100 p-6 text-slate-900">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header>
-          <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">Workspace</p>
-          <h1 className="text-3xl font-bold">Teams</h1>
-        </header>
-        {organizationId && (
-          <TeamCreationForm
-            organizationId={organizationId}
-            onCreated={(team) => {
-              setTeams((current) => [...current, team]);
-              setSelectedId(team._id);
-            }}
-          />
-        )}
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <div className="space-y-3">
-            {teams.map((team) => (
+    <div className="space-y-8 animate-fadeIn">
+      <div className="border-b border-surface-800/80 pb-6">
+        <div className="flex items-center gap-2">
+          <span className="badge-cyan">ORGANIZATION SQUADS</span>
+          <span className="text-xs text-slate-500 font-mono">Cross-Functional</span>
+        </div>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          Engineering Squads & Teams
+        </h1>
+        <p className="mt-1 text-sm text-slate-400">
+          Structure teams, assign members, and allocate sprint backlogs.
+        </p>
+      </div>
+
+      {organizationId && (
+        <TeamCreationForm
+          organizationId={organizationId}
+          onCreated={(team) => {
+            setTeams((current) => [...current, team]);
+            setSelectedId(team._id);
+          }}
+        />
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+        <div className="space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">
+            Active Squads ({teams.length})
+          </h2>
+          {teams.length === 0 ? (
+            <div className="glass-panel p-6 text-center text-xs text-slate-500">
+              No squads created yet.
+            </div>
+          ) : (
+            teams.map((team) => (
               <TeamCard
                 key={team._id}
                 team={team}
                 selected={team._id === selectedId}
                 onSelect={() => setSelectedId(team._id)}
               />
-            ))}
-          </div>
-          {selected && (
+            ))
+          )}
+        </div>
+
+        <div>
+          {selected ? (
             <TeamDetails
               team={selected}
               onChanged={(team) =>
@@ -59,9 +82,14 @@ export const TeamsPage = (): ReactElement => {
                 setSelectedId('');
               }}
             />
+          ) : (
+            <div className="glass-panel p-12 text-center text-slate-400">
+              <p>Select a squad on the left to view member roster and settings.</p>
+            </div>
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 };
+

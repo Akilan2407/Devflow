@@ -15,6 +15,9 @@
     "lint": "npm run lint --workspace client && npm run lint --workspace server",
     "format:check": "prettier --check .",
     "format": "prettier --write ."
+    ,"test": "npm run test --workspace server && npm run test --workspace client"
+    ,"test:watch": "npm run test:watch --workspace server && npm run test:watch --workspace client"
+    ,"test:coverage": "npm run test:coverage --workspace server && npm run test:coverage --workspace client"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",

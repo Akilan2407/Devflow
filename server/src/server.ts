@@ -84,4 +84,6 @@ const startServer = async (): Promise<void> => {
   process.once('SIGTERM', () => void shutdown());
 };
 
-void startServer();
+if (process.argv[1] && new URL(`file://${process.argv[1]}`).href === import.meta.url) {
+  void startServer();
+}

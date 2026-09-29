@@ -5,7 +5,6 @@ import type { PublicUser } from '../types/auth.types.js';
 export type TokenPayload = JwtPayload & { sub: string; type: 'access' | 'refresh' };
 
 const signOptions = (type: TokenPayload['type']): SignOptions => ({
-  subject: type,
   expiresIn: (type === 'access'
     ? env.ACCESS_TOKEN_EXPIRES_IN
     : env.REFRESH_TOKEN_EXPIRES_IN) as SignOptions['expiresIn'],

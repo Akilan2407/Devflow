@@ -30,42 +30,63 @@ export const TeamDetails = ({ team, onChanged, onDeleted }: Props): ReactElement
     onDeleted();
   };
   return (
-    <section className="rounded-xl bg-white p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
+    <section className="glass-panel p-6 sm:p-8 space-y-6">
+      <div className="flex items-start justify-between gap-4 border-b border-surface-800 pb-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">{team.name}</h2>
-          <p className="mt-2 text-slate-500">{team.description || 'No description'}</p>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white">{team.name}</h2>
+            <span className="badge-cyan text-[10px]">Active Squad</span>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">{team.description || 'No description provided.'}</p>
         </div>
-        <button className="text-sm font-semibold text-red-600" onClick={() => void removeTeam()}>
-          Delete
+        <button className="button-danger text-xs" onClick={() => void removeTeam()}>
+          Delete Squad
         </button>
       </div>
-      <h3 className="mt-8 font-bold text-slate-900">Manage members</h3>
-      <div className="mt-3 flex gap-3">
-        <input
-          className="input max-w-md"
-          placeholder="User ID"
-          value={userId}
-          onChange={(event) => setUserId(event.target.value)}
-        />
-        <button className="button max-w-fit" onClick={() => void add()}>
-          Add member
-        </button>
+
+      <div>
+        <h3 className="font-bold text-white text-sm">Squad Members</h3>
+        <p className="mt-0.5 text-xs text-slate-400">Add or manage team members participating in this squad.</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <input
+            className="input max-w-md font-mono text-xs"
+            placeholder="User ID or Email..."
+            value={userId}
+            onChange={(event) => setUserId(event.target.value)}
+          />
+          <button className="button text-xs" onClick={() => void add()}>
+            Add Member
+          </button>
+        </div>
+        {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
       </div>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-      <ul className="mt-5 space-y-2">
-        {team.members.map((member) => (
-          <li
-            className="flex items-center justify-between rounded bg-slate-50 px-3 py-2 text-sm text-slate-700"
-            key={member}
-          >
-            <span>{member}</span>
-            <button className="font-semibold text-red-600" onClick={() => void remove(member)}>
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+
+      <div className="space-y-2">
+        {team.members.length === 0 ? (
+          <p className="text-xs text-slate-500 italic">No members assigned yet.</p>
+        ) : (
+          team.members.map((member) => (
+            <div
+              className="flex items-center justify-between rounded-xl border border-surface-800 bg-[#121B2B] px-4 py-2.5 text-xs text-slate-200"
+              key={member}
+            >
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-brand-500/20 text-brand-400 font-bold grid place-items-center text-[10px]">
+                  M
+                </div>
+                <span className="font-mono">{member}</span>
+              </div>
+              <button
+                className="font-semibold text-rose-400 hover:text-rose-300 text-xs"
+                onClick={() => void remove(member)}
+              >
+                Remove
+              </button>
+            </div>
+          ))
+        )}
+      </div>
     </section>
   );
 };
+
